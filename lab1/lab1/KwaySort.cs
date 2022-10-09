@@ -1,222 +1,175 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace lab1
 {
     public class KwaySort
     {
-        public static void MergeSort(List<string> FileBList, List<string> FileCList)
+        public static void MergeSort(string fileName, out string sortedFileName,  bool Modified, int numberOfFIles = 5)
         {
-            List<long> SeekList = CreateSeekList(FileBList);
-            int index = 0;
-            ResursiveMerge(FileBList, FileCList, SeekList, ref index);
-            DeleteFiles(FileBList);
-            if (GetNumberOfFiles(FileCList) > 1)
+            if (numberOfFIles < 2)
+                throw new ArgumentException(null, nameof(numberOfFIles));
+            if (Modified)
             {
-                MergeSort(FileCList, FileBList);
+                string[] BFilesArray = Enumerable.Range(1, numberOfFIles).Select(i => $"B{i}mod.bin").ToArray();
+                string[] CFilesArray = Enumerable.Range(1, numberOfFIles).Select(i => $"C{i}mod.bin").ToArray();
+                SplitFile(fileName, BFilesArray);
+                SortHelper(BFilesArray, CFilesArray, out sortedFileName);
+            }
+            else
+            {
+                string[] BFilesArray = Enumerable.Range(1, numberOfFIles).Select(i => $"B{i}.bin").ToArray();
+                string[] CFilesArray = Enumerable.Range(1, numberOfFIles).Select(i => $"C{i}.bin").ToArray();
+                SplitFile(fileName, BFilesArray);
+                SortHelper(BFilesArray, CFilesArray, out sortedFileName);
             }
         }
 
-        public static int GetNumberOfFiles(List<string> FileList)
+        public static void SortParts(string fileName, string resultFileName, int size, int shareSize)
         {
-            int number = 0;
-            foreach (var path in FileList)
+            if (File.Exists(resultFileName))
             {
-                FileInfo file = new FileInfo(path);
-                if (file.Exists && !IsFileEmpty(path))
+                File.Delete(resultFileName);
+            }
+
+            int[] array = new int[shareSize];
+            var reader = new BinaryReader(File.Open(fileName, FileMode.Open));
+            var writer = new BinaryWriter(File.Open(resultFileName, FileMode.OpenOrCreate));
+            for (int i = 0; i < size / shareSize; i++)
+            {
+                for (int j = 0; j < shareSize; j++)
                 {
-                    number++;
+                    array[j] = reader.ReadInt32();
+                }
+
+                Array.Sort(array);
+                for (int j = 0; j < shareSize; j++)
+                {
+                    writer.Write(array[j]);
                 }
             }
 
-            return number;
+            reader.Close();
+            writer.Close();
         }
-        public static void DeleteFiles(List<string> FileList)
+
+        private static void SortHelper(string[] BFilesArray, string[] CFIlesArray, out string fileName)
         {
-            foreach (var path in FileList)
+            var readers = BFilesArray.Select(f => new BinaryReader(File.OpenRead(f))).ToList();
+            readers.Where(r => (r.BaseStream.Position == r.BaseStream.Length)).ToList().ForEach(r =>
             {
-                FileInfo file = new FileInfo(path);
-                file.Delete();
-            }
-        }
-        
-        public static void ResursiveMerge(List<string> FileBList, List<string> FileCList, List<long> SeekList, ref int index)
-        {
-            // int seek = 0;
-            List<List<int>> SeriesList = new List<List<int>>();
-            GetSeriesList(FileBList, SeekList, SeriesList);
-            List<int> ToFile = new List<int>();
-            GetSeriesToFile(SeriesList, ToFile);
-            WriteToCFile(ToFile, ref index, FileCList);
-            if (!IsFilesEnded(FileBList, SeekList))
+                r.Dispose();
+                readers.Remove(r);
+            });
+
+            if (readers.Count == 1)
             {
-                ResursiveMerge(FileBList, FileCList, SeekList, ref index);
-            }
-        }
-        
-        public static void WriteToCFile(List<int> ToFIle, ref int index, List<string> FileCList)
-        {
-            if (index >= FileCList.Count)
-            {
-                int temp = index % FileCList.Count;
-                index = temp;
+                fileName = ((FileStream) readers.First().BaseStream).Name;
+                return;
             }
 
-            // string path = "";
-            // if (FileBList[0] == "B1.bin")
-            // {
-            //     path = $"C{index + 1}.bin";
-            // }
-            // else if (FileBList[0] == "C1.bin")
-            // {
-            //     path = $"B{index + 1}.bin";
-            // }
-            //
-            using (BinaryWriter file = new BinaryWriter(new FileStream(FileCList[index], FileMode.Append)))
+            var writers = CFIlesArray.Select(f => new BinaryWriter(File.Open(f, FileMode.Create))).ToList();
+            var currentWriter = writers.First();
+            var currentReader = readers.First();
+            var nums = new List<int>();
+            var nextNums = new List<int>();
+            var readerAndPrevNum = readers.ToDictionary(r => r, _ => int.MinValue);
+
+            while (readers.Count != 0)
             {
-                foreach (var number in ToFIle)
+                while (currentReader.BaseStream.Position == currentReader.BaseStream.Length)
                 {
-                    file.Write(number);
-                }
-            }
-            ToFIle.Clear();
-            index++;
-        }
-        public static bool IsFilesEnded(List<string> FileList, List<long> SeekList)
-        {
-            foreach (var path in FileList)
-            {
-                using (BinaryReader file = new BinaryReader(new FileStream(path, FileMode.Open)))
-                {
-                    file.BaseStream.Position = SeekList[FileList.IndexOf(path)];
-                    if (file.PeekChar() != -1)
+                    var readerToRemove = currentReader;
+                    currentReader = readers.Next(currentReader);
+                    readers.Remove(readerToRemove);
+                    readerAndPrevNum.Remove(readerToRemove);
+                    readerToRemove.Dispose();
+                    if (readers.Count == 0)
                     {
-                        return false;
-                    }
-                }
-            }
-            return true;
-        }
-        public static bool IsFileEmpty(string path)
-        {
-           using (BinaryReader file = new BinaryReader(new FileStream(path, FileMode.Open)))
-           {
-                file.BaseStream.Position = 0;
-                if (file.PeekChar() != -1)
-                {
-                    return false;
-                }
-           }
-           return true;
-        }
-        public static void GetSeriesToFile(List<List<int>> SeriesList, List<int> ToFile)
-        {
-            int i = 0;
-            while (i < SeriesList.Count)
-            {
-                if (SeriesList[i].Count == 0)
-                {
-                    SeriesList.RemoveAt(i);
-                }
-                i++;
-            }
-            List<int> ElementsList = new List<int>();
-            foreach (var series in SeriesList)
-            {
-                if (series.Count != 0)
-                {
-                    ElementsList.Add(series[0]); 
-                }
-            }
-            int minIndex = FindMin(ElementsList);
-            while (SeriesList[minIndex].Count == 0)
-            {
-                SeriesList.RemoveAt(minIndex);
-            }
-            SeriesList[minIndex].Remove(ElementsList[minIndex]);
-
-            ToFile.Add(ElementsList[minIndex]);
-            if (ElementsList.Count > 1)
-            {
-                ElementsList.Clear();
-                GetSeriesToFile(SeriesList, ToFile);
-            }
-            else if (ElementsList.Count == 1)
-            {
-                foreach (var element in SeriesList[minIndex])
-                {
-                    ToFile.Add(element);
-                }
-                ElementsList.Clear();
-                SeriesList.Clear();
-            }
-            
-        }
-        public static void GetSeriesList(List<string> ListFiles, List<long> SeekList, List<List<int>> SeriesList)
-        {
-            // List<List<int>> SeriesList = new List<List<int>>();
-            foreach (var file in ListFiles)
-            {
-                long seek = SeekList[ListFiles.IndexOf(file)];
-                List<int> series = ReadSeries(file, ref seek);
-                SeriesList.Add(series);
-                SeekList[ListFiles.IndexOf(file)] = seek;
-            }
-            //GetSeriesList(ListFiles, SeekList, SeriesList);
-        }
-
-        public static List<long> CreateSeekList(List<string> ListFiles)
-        {
-            List<long> SeekList = new List<long>();
-            foreach (var file in ListFiles)
-            {
-                SeekList.Add(0);
-            }
-
-            return SeekList;
-        }
-        
-
-        public static List<int> ReadSeries(string path, ref long seek)
-        {
-            List<int> series = new List<int>();
-            using (BinaryReader file = new BinaryReader(new FileStream(path, FileMode.OpenOrCreate)))
-            {
-                int current, next;
-                file.BaseStream.Position = seek;
-                while (file.BaseStream.Position < file.BaseStream.Length - sizeof(Int32))
-                {
-                    current = file.ReadInt32();
-                    next = file.ReadInt32();
-                    file.BaseStream.Position -= sizeof(Int32);
-                    if (next >= current)
-                    {
-                        series.Add(current);
-                    }
-                    else
-                    {
-                        series.Add(current);
-                        seek = file.BaseStream.Position;
                         break;
                     }
                 }
-            }
-            return series;
-        }
 
-        public static int FindMin(List<int> sequence)
-        {
-            int minindex = 0;
-            for (int index = 0; index < sequence.Count; index++)
-            {
-                if (sequence[index] <= sequence[minindex])
+                if (readers.Count == 0)
                 {
-                    minindex = index;
+                    nums.Sort();
+                    foreach (int n in nums)
+                    {
+                        currentWriter.Write(n);
+                    }
+
+                    currentWriter = writers.Next(currentWriter);
+                    nextNums.Sort();
+                    foreach (int n in nextNums)
+                    {
+                        currentWriter.Write(n);
+                    }
+
+                    break;
+                }
+
+                int num = currentReader.ReadInt32();
+                if (num >= readerAndPrevNum[currentReader])
+                {
+                    nums.Add(num);
+                    readerAndPrevNum[currentReader] = num;
+                }
+                else
+                {
+                    nextNums.Add(num);
+                    readerAndPrevNum[currentReader] = num;
+                    currentReader = readers.Next(currentReader);
+                }
+
+                if (nextNums.Count >= readers.Count)
+                {
+                    nums.Sort();
+                    foreach (int n in nums)
+                    {
+                        currentWriter.Write(n);
+                    }
+
+                    currentWriter = writers.Next(currentWriter);
+                    nums.Clear();
+                    nums.AddRange(nextNums);
+                    nextNums.Clear();
                 }
             }
 
-            return minindex;
+            readers.ForEach(r => r.Dispose());
+            writers.ForEach(w => w.Dispose());
+            SortHelper(CFIlesArray, BFilesArray, out fileName);
+            
+        }
+
+
+        private static void SplitFile(string fileName, string[] bHelpFiles)
+        {
+            var writers = bHelpFiles.Select(f => new BinaryWriter(File.Open(f, FileMode.Create))).ToList();
+            var currentWriter = writers.First();
+            var reader = new BinaryReader(File.OpenRead(fileName));
+            int previousNum = int.MinValue;
+
+            while (reader.BaseStream.Position < reader.BaseStream.Length)
+            {
+                int num = reader.ReadInt32();
+                if (num >= previousNum)
+                {
+                    currentWriter.Write(num);
+                }
+                else
+                {
+                    currentWriter = writers.Next(currentWriter);
+                    currentWriter.Write(num);
+                }
+
+                previousNum = num;
+            }
+
+            writers.ForEach(w => w.Dispose());
+            reader.Close();
         }
     }
 }
