@@ -73,7 +73,7 @@ namespace lab1
             //     path = $"B{index + 1}.bin";
             // }
             //
-            using (BinaryWriter file = new BinaryWriter(new FileStream(FileCList[index], FileMode.OpenOrCreate)))
+            using (BinaryWriter file = new BinaryWriter(new FileStream(FileCList[index], FileMode.Append)))
             {
                 foreach (var number in ToFIle)
                 {
@@ -185,10 +185,11 @@ namespace lab1
             {
                 int current, next;
                 file.BaseStream.Position = seek;
-                while (file.BaseStream.Position < file.BaseStream.Length)
+                while (file.BaseStream.Position < file.BaseStream.Length - sizeof(Int32))
                 {
                     current = file.ReadInt32();
-                    next = file.PeekChar();
+                    next = file.ReadInt32();
+                    file.BaseStream.Position -= sizeof(Int32);
                     if (next >= current)
                     {
                         series.Add(current);

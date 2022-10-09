@@ -20,7 +20,7 @@ namespace lab1
             CreateNumFile(file_name);
             Console.WriteLine("numbers:");
             using (BinaryReader reader = new BinaryReader(new FileStream(file_name, FileMode.Open, FileAccess.Read))) {
-                while (reader.PeekChar() != -1) {
+                while (reader.BaseStream.Position < reader.BaseStream.Length) {
                     Console.WriteLine(reader.ReadInt32());
                 }
             }
@@ -43,7 +43,7 @@ namespace lab1
             }
             Console.WriteLine("Sorted: ");
             using (BinaryReader reader = new BinaryReader(new FileStream(path, FileMode.Open, FileAccess.Read))) {
-                while (reader.PeekChar() != -1) {
+                while (reader.BaseStream.Position < reader.BaseStream.Length) {
                     Console.WriteLine(reader.ReadInt32());
                 }
             }
@@ -55,7 +55,7 @@ namespace lab1
             int[] numbers = new int[200];
             Random random = new Random();
             for (int i = 0; i < 200; i++) {
-                numbers[i] = random.Next(0, 50);
+                numbers[i] = random.Next(0, 201);
             }
             using (BinaryWriter writer = new BinaryWriter(new FileStream(file_name, FileMode.Create))) {
                 foreach (int number in numbers) {
@@ -108,10 +108,11 @@ namespace lab1
                 List<int> ToFile = new List<int>();
                 int current;
                 int next;
-                while (file.BaseStream.Position < file.BaseStream.Length)
+                while (file.BaseStream.Position < file.BaseStream.Length - sizeof(Int32))
                 {
                     current = file.ReadInt32();
-                    next = file.PeekChar();
+                    next = file.ReadInt32();
+                    file.BaseStream.Position -= sizeof(Int32);
                     if (next >= current) {
                         ToFile.Add(current);
                     }
