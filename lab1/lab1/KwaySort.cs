@@ -145,27 +145,27 @@ namespace lab1
         }
 
 
-        private static void SplitFile(string fileName, string[] bHelpFiles)
+        private static void SplitFile(string fileName, string[] BFilesArray)
         {
-            var writers = bHelpFiles.Select(f => new BinaryWriter(File.Open(f, FileMode.Create))).ToList();
+            var writers = BFilesArray.Select(f => new BinaryWriter(File.Open(f, FileMode.Create))).ToList();
             var currentWriter = writers.First();
             var reader = new BinaryReader(File.OpenRead(fileName));
-            int previousNum = int.MinValue;
+            int previous = int.MinValue;
 
             while (reader.BaseStream.Position < reader.BaseStream.Length)
             {
-                int num = reader.ReadInt32();
-                if (num >= previousNum)
+                int current = reader.ReadInt32();
+                if (current >= previous)
                 {
-                    currentWriter.Write(num);
+                    currentWriter.Write(current);
                 }
                 else
                 {
                     currentWriter = writers.Next(currentWriter);
-                    currentWriter.Write(num);
+                    currentWriter.Write(current);
                 }
 
-                previousNum = num;
+                previous = current;
             }
 
             writers.ForEach(w => w.Dispose());

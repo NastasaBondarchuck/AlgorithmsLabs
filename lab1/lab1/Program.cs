@@ -9,7 +9,7 @@ namespace lab1
     {
         static void Main(string[] args) 
         {
-            const int linesCount = 100_000_000;
+            const int linesCount = 100_000;
             const int megabytes = 10;
             Console.WriteLine("Not modified");
             Normal(megabytes);
