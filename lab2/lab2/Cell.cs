@@ -8,20 +8,22 @@ namespace lab2
         public int X;
         public int Y;
         public int MDistance;
-        public List<Cell> Path;
+        public List<(int, int)> Path;
 
         public Cell(int x, int y)
         {
             X = x;
             Y = y;
             MDistance = Int32.MaxValue;
-            Path = new List<Cell>();
+            Path = new List<(int, int)>{(X, Y)};
         }
 
         public Cell()
         {
             X = 0;
             Y = 0;
+            MDistance = Int32.MaxValue;
+            Path = new List<(int, int)>{(X, Y)};
         }
     }
 }

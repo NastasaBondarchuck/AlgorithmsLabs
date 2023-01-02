@@ -7,13 +7,13 @@ namespace lab2
 {
     public class FindWayAlgorithm
     {
-        public static List<Cell> BFS(Cell source, Cell destination, Maze maze)
+        public static List<(int, int)> BFS(Cell source, Cell destination, Maze maze)
         {
             int[] rowsMove = { -1, 0, 0, 1 };
             int[] colsMove = { 0, -1, 1, 0 };
             if (maze.Matrix[source.X,source.Y] != 1 || maze.Matrix[destination.X,destination.Y] != 1)
             {
-                return new List<Cell>();
+                return new List<(int, int)>();
             }
             bool[,] visitedCells = new bool[maze.Matrix.GetLength(0), maze.Matrix.GetLength(1)];
             visitedCells[source.X, source.Y] = true;
@@ -36,25 +36,26 @@ namespace lab2
                         visitedCells[row, col] = true;
                         Cell NeighborCell = new Cell(row, col)
                         {
-                            Path = new List<Cell>(current.Path)
+                            Path = new List<(int, int)>(current.Path)
                         };
-                        NeighborCell.Path.Add(NeighborCell);
+                        NeighborCell.Path.Add((NeighborCell.X, NeighborCell.Y));
                         
                         Queue.Add(NeighborCell);
                     }
                 }
             }
-            return new List<Cell>();
+            Queue.Clear();
+            return new List<(int, int)>();
         }
 
-        public static List<Cell> AStar(Cell source, Cell destination, Maze maze)
+        public static List<(int, int)> AStar(Cell source, Cell destination, Maze maze)
         {
             int[] rowsMove = { -1, 0, 0, 1 };
             int[] colsMove = { 0, -1, 1, 0 };
             
             if (maze.Matrix[source.X,source.Y] != 1 || maze.Matrix[destination.X,destination.Y] != 1)
             {
-                return new List<Cell>();
+                return new List<(int, int)>();
             }
             
             bool[,] visitedCells = new bool[maze.Matrix.GetLength(0), maze.Matrix.GetLength(1)];
@@ -80,16 +81,17 @@ namespace lab2
                         visitedCells[row, col] = true;
                         Cell NeighborCell = new Cell(row, col)
                         {
-                            Path = new List<Cell>(current.Path)
+                            Path = new List<(int, int)>(current.Path)
                         };
-                        NeighborCell.Path.Add(NeighborCell);
+                        NeighborCell.Path.Add((NeighborCell.X, NeighborCell.Y));
                         maze.ManhattanDistance(NeighborCell);
                         AddToQueue(PriorityQueue, NeighborCell);
                     }
                     
                 }
             }
-            return new List<Cell>();
+            PriorityQueue.Clear();
+            return new List<(int, int)>();
         }
 
         public static void AddToQueue(List<Cell> Queue, Cell cell)
