@@ -9,6 +9,7 @@ namespace lab2
     {
         public static List<(int, int)> BFS(Cell source, Cell destination, Maze maze)
         {
+
             int[] rowsMove = { -1, 0, 0, 1 };
             int[] colsMove = { 0, -1, 1, 0 };
             if (maze.Matrix[source.X,source.Y] != 1 || maze.Matrix[destination.X,destination.Y] != 1)
@@ -23,6 +24,7 @@ namespace lab2
                 Cell current = Queue[0];
                 if (current.X == destination.X && current.Y == destination.Y)
                 {
+                   
                     return destination.Path = current.Path;
                     // return current.Distance;
                 }
@@ -31,15 +33,16 @@ namespace lab2
                 {
                     int row = current.X + rowsMove[i];
                     int col = current.Y + colsMove[i];
+      
                     if (maze.IsValid(row, col) && maze.Matrix[row, col] == 1 && !visitedCells[row, col])
                     {
+
                         visitedCells[row, col] = true;
                         Cell NeighborCell = new Cell(row, col)
                         {
                             Path = new List<(int, int)>(current.Path)
                         };
                         NeighborCell.Path.Add((NeighborCell.X, NeighborCell.Y));
-                        
                         Queue.Add(NeighborCell);
                     }
                 }
@@ -50,6 +53,7 @@ namespace lab2
 
         public static List<(int, int)> AStar(Cell source, Cell destination, Maze maze)
         {
+            int counterIteration = 0, counterState = 0, counterStateMemory = 0;
             int[] rowsMove = { -1, 0, 0, 1 };
             int[] colsMove = { 0, -1, 1, 0 };
             
@@ -64,11 +68,12 @@ namespace lab2
             PriorityQueue.Add(source);
             while (PriorityQueue.Count != 0)
             {
-                
+                counterIteration++;
                 Cell current = PriorityQueue[0];
                 maze.ManhattanDistance(current);
                 if (current.X == destination.X && current.Y == destination.Y)
                 {
+                    Console.WriteLine($"Iterations: {counterIteration}, States: {counterState}, States in memory: {counterStateMemory}");
                     return destination.Path = current.Path;
                 }
                 PriorityQueue.RemoveAt(0);
@@ -76,8 +81,10 @@ namespace lab2
                 {
                     int row = current.X + rowsMove[i];
                     int col = current.Y + colsMove[i];
+                    counterState++;
                     if (maze.IsValid(row, col) && maze.Matrix[row, col] == 1 && !visitedCells[row, col])
                     {
+                        counterStateMemory++;
                         visitedCells[row, col] = true;
                         Cell NeighborCell = new Cell(row, col)
                         {

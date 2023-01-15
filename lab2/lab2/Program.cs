@@ -37,24 +37,24 @@ namespace lab2
             if (result.Count > 0)
             {
                 Console.WriteLine($"The shortest path is: {result.Count}.");
-                // Console.Write("Path is: ");
-                // foreach (var cell in result)
-                // {
-                //     if (result.IndexOf(cell) == result.Count-1)
-                //     {
-                //         Console.Write($"({cell})");
-                //     }
-                //     else
-                //     {
-                //         Console.Write($"({cell}) -> ");
-                //     }
-                // }
+                Console.Write("Path is: ");
+                foreach (var cell in result)
+                {
+                    if (result.IndexOf(cell) == result.Count-1)
+                    {
+                        Console.Write($"({cell})");
+                    }
+                    else
+                    {
+                        Console.Write($"({cell}) -> ");
+                    }
+                }
             }
             else
             {
                 Console.WriteLine("Path doesn't exist.");
             }
-            Console.WriteLine($"Time of working the BFS algorithm: {sw.Elapsed.TotalSeconds}");
+            Console.WriteLine($"\nTime of working the BFS algorithm: {sw.Elapsed.TotalSeconds}");
             result.Clear();
             sw = Stopwatch.StartNew();
             result = FindWayAlgorithm.AStar(source, destination, maze);
@@ -63,23 +63,23 @@ namespace lab2
             if (result.Count > 0)
             {
                 Console.WriteLine($"The shortest path is: {result.Count}.");
-                // foreach (var cell in result)
-                // {
-                //     if (result.IndexOf(cell) == result.Count-1)
-                //     {
-                //         Console.Write($"({cell})");
-                //     }
-                //     else
-                //     {
-                //         Console.Write($"({cell}) -> ");
-                //     }
-                // }
+                foreach (var cell in result)
+                {
+                    if (result.IndexOf(cell) == result.Count-1)
+                    {
+                        Console.Write($"({cell})");
+                    }
+                    else
+                    {
+                        Console.Write($"({cell}) -> ");
+                    }
+                }
             }
             else
             {
                 Console.WriteLine("Path doesn't exist.");
             }
-            Console.WriteLine($"Time of working the AStar algorithm: {sw.Elapsed.TotalSeconds}");
+            Console.WriteLine($"\nTime of working the AStar algorithm: {sw.Elapsed.TotalSeconds}");
             result.Clear();
             Console.ReadLine();
         }
