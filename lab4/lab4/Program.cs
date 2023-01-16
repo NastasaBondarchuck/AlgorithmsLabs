@@ -1,76 +1,29 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
+using System.Diagnostics;
 namespace lab4
 {
     internal class Program
     {
         public static void Main(string[] args)
-        { int[][] graph = GenerateGraph(200, 20);
-            int numOnlookers = 28;
-            int numScouts = 2;
-            int numBees = numScouts + numOnlookers;
-            int lowerBound = 1;
-            int upperBound = 50;
-
-            ABC abc = new ABC(graph, numBees, numOnlookers, numScouts, lowerBound, upperBound);
-
-            int[] bestSolution = abc.Solve();
-            int colors = bestSolution.Distinct().Count();
-            Console.WriteLine(IsCorrect(graph, bestSolution)
-                ? string.Join(", ", bestSolution)
-                : "The solution is incorrect!");
-            Console.WriteLine($"Used colors: {colors}");
-            Console.ReadLine();
-        }
-
-        private static int[][] GenerateGraph(int numVertices, int maxEdges)
         {
-            Random rand = new Random();
-            int[][] graph = new int[numVertices][];
-            for (int i = 0; i < numVertices; i++)
-            {
-                List<int> neighbors = new List<int>();
-                for (int j = 0; j < numVertices; j++)
-                {
-                    if (i != j && rand.NextDouble() < 0.5)
-                        neighbors.Add(j);
-                }
+            var adjMatrix = new int[Constants.VerticesNumber, Constants.VerticesNumber];
+            var graph = new Graph(adjMatrix);
 
-                while (neighbors.Count < 2)
-                {
-                    int neighbor = rand.Next(numVertices);
-                    if (neighbor != i && !neighbors.Contains(neighbor))
-                        neighbors.Add(neighbor);
-                }
+            Console.WriteLine("Matrix is valid: " + graph.IsMatrixValid());
+            Console.WriteLine("Graph degrees: ");
+            Helper.PrintArray(graph.GetVertexDegrees());
 
-                while (neighbors.Count > maxEdges)
-                {
-                    int index = rand.Next(neighbors.Count);
-                    neighbors.RemoveAt(index);
-                }
+            Console.WriteLine("Running...");
+            var sw = Stopwatch.StartNew();
 
-                graph[i] = neighbors.ToArray();
-            }
+            graph = new Algorithm(graph).Run();
+            sw.Stop();
+            Console.WriteLine($"Time to run: {sw.ElapsedMilliseconds / 1000}s");
+        
+            Console.WriteLine("Graph coloring: ");
+            Helper.PrintArray(graph.GetColors());
 
-            return graph;
-        }
-
-        private static bool IsCorrect(int[][] graph, int[] solution)
-        {
-            for (int i = 0; i < graph.Length; i++)
-            {
-                for (int j = 0; j < graph[i].Length; j++)
-                {
-                    if (solution[i] == solution[graph[i][j]])
-                    {
-                        return false;
-                    }
-                }
-            }
-
-            return true;
+            Console.WriteLine("Graph colored properly: " + graph.IsGraphProperlyColored());
         }
     }
 }
